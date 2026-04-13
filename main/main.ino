@@ -1,4 +1,4 @@
-#include "SmallText.h"
+#include "fonts/SmallText.h"
 
 #include <SPI.h>
 #include <TFT_eSPI.h>
