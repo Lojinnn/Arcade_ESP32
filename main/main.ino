@@ -7,6 +7,7 @@
 
 uint16_t text_x = 10;
 uint16_t text_y = 40;
+int i;
 
 #define But_Wh 26
 #define But_Bl 25
@@ -16,6 +17,7 @@ uint8_t But_state;
 TFT_eSPI tft = TFT_eSPI();
 
 void setup() {
+  Serial.begin(115200);
   tft.init();
 
   pinMode(But_Wh, INPUT);
@@ -39,11 +41,12 @@ void menu(){
   tft.print("ARCADE_ESP32");
   tft.setCursor(text_x, text_y);
   tft.print("Star_shooter");
-  if(digitalRead(But_Wh)){
-    tft.drawRect(text_x-5, text_y-5, text_x+50, text_y+10, TFT_WHITE);
+  if(But_state){
+   // tft.clear();
+    tft.drawRect(text_x-5, text_y-i, text_x+150, text_y-i-5, TFT_WHITE);
     
+    i= i-20;
 
-    But_state = 0;
   }
 
 
@@ -54,18 +57,7 @@ void menu(){
 void loop() {
 
   menu();
-
-  delay(15);
+  Serial.println(But_state);
   
 }
 
-void buttonPressed(int But){
-  long tau = millis();
-  int buff;
-  if(!digitalRead(But)){
-    tau = buff;
-  }
-  if(digitalRead(But) and 1000 <= tau-buff){
-    But_state = 1;
-  }
-}
