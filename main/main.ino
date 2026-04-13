@@ -1,9 +1,11 @@
-#include "SmallText.h"
+#include <Adafruit_GFX.h>
+#include <gfxfont.h>
 
+#include <Fonts/FreeSans9pt7b.h>
 #include <SPI.h>
 #include <TFT_eSPI.h>
-
-#define SM_TXT SmallText
+long tau = 0;
+long buff = 0;
 
 uint16_t text_x = 10;
 uint16_t text_y = 40;
@@ -29,14 +31,12 @@ void setup() {
   tft.setSwapBytes(true);
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  //tft.setTextSize(1.5);
-
 
 }
 
 void menu(){
-  buttonPressed(But_Wh);
-  tft.loadFont(SM_TXT);
+  //buttonPressed(But_Wh);
+  tft.setFreeFont(&FreeSans9pt7b);
   tft.setCursor(65, 5);
   tft.print("ARCADE_ESP32");
   tft.setCursor(text_x, text_y);
@@ -49,15 +49,20 @@ void menu(){
 
   }
 
-
-  tft.unloadFont();
-
 }
 
 void loop() {
 
+  click(But_Wh);
   menu();
-  Serial.println(But_state);
+  Serial.println(buff);
   
 }
 
+void click(int Button){
+  tau = millis();
+  
+  if(!digitalRead(Button)){
+    buff = tau;
+  }
+}
