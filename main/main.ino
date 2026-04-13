@@ -44,6 +44,6 @@ void loop() {
   tft.print("This is test text");
   tft.unloadFont();
 
-  delay(10);
+  delay(15);
   
 }
