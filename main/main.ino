@@ -1,20 +1,20 @@
-#include <Adafruit_GFX.h>
-#include <gfxfont.h>
+#include <Bounce2.h>
 
-#include <Fonts/FreeSans9pt7b.h>
 #include <SPI.h>
 #include <TFT_eSPI.h>
-long tau = 0;
-long buff = 0;
 
-uint16_t text_x = 10;
-uint16_t text_y = 40;
-int i;
+uint16_t text_h = 20;
+uint16_t start_text_y = 40;
+uint8_t sel_item = 0;
+
+int now_scr = 0;
+const char* SCREEN[] = {"MENU", "STAR_SHOOTER", "OPTIONS", "HIGH_SCORES"};
+const char* Menu_str[] = {"Star shooter", "Options", "Your game statistics"};
+Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT;
 
 #define But_Wh 26
 #define But_Bl 25
 #define Sv 4
-uint8_t But_state;
 
 TFT_eSPI tft = TFT_eSPI();
 
@@ -22,8 +22,10 @@ void setup() {
   Serial.begin(115200);
   tft.init();
 
-  pinMode(But_Wh, INPUT);
-  pinMode(Sv, OUTPUT);
+  But_UP.attach(But_Wh, INPUT);    
+  But_UP.interval(25);
+  But_DOWN.attach(But_Bl, INPUT);    
+  But_DOWN.interval(25);
 
   digitalWrite(Sv, HIGH);
 
@@ -35,34 +37,45 @@ void setup() {
 }
 
 void menu(){
-  //buttonPressed(But_Wh);
+
   tft.setFreeFont(&FreeSans9pt7b);
   tft.setCursor(65, 5);
   tft.print("ARCADE_ESP32");
-  tft.setCursor(text_x, text_y);
-  tft.print("Star_shooter");
-  if(But_state){
-   // tft.clear();
-    tft.drawRect(text_x-5, text_y-i, text_x+150, text_y-i-5, TFT_WHITE);
-    
-    i= i-20;
+
+ for(int i = 0; i < 3; i++){
+    uint16_t yPos = start_text_y + (i * text_h);
+    tft.setCursor(20, yPos);
+    tft.print(Menu_str[i]);
+
+    if(i == sel_item){
+      tft.drawRect(10, yPos-12, 160, 18, TFT_YELLOW);
+    }
 
   }
+
 
 }
 
 void loop() {
+  But_UP.update();
+  But_DOWN.update();
 
-  click(But_Wh);
   menu();
-  Serial.println(buff);
-  
+
+  if(But_UP.fell() and SCREEN[now_scr] == "MENU"){
+    sel_item--;
+    if(sel_item < 0){
+      sel_item = 2;
+    }
+    tft.fillScreen(TFT_BLACK);
+  }
+  if(But_DOWN.fell() and SCREEN[now_scr] == "MENU"){
+    sel_item++;
+    if(sel_item > 2){
+      sel_item = 0;
+    }
+    tft.fillScreen(TFT_BLACK);
+  }
+
 }
 
-void click(int Button){
-  tau = millis();
-  
-  if(!digitalRead(Button)){
-    buff = tau;
-  }
-}
