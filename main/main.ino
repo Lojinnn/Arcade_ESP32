@@ -16,13 +16,18 @@ Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT;
 #define JY 34
 #define But_Wh 26
 #define But_Bl 25
-#define But_Gr 14
+#define But_Gr 27
+#define But_Rd 14
 #define Sv 4
 
 TFT_eSPI tft = TFT_eSPI();
 
-int x_s = 100;
-int y_s = 100;
+int x_s = random(2, 238-32);
+int y_s = random(2, 278-14);
+int xvs = random(-5, 5);
+int yvs = random(-5, 5);
+
+
 
 void setup() {
   Serial.begin(115200);
@@ -34,11 +39,10 @@ void setup() {
   But_DOWN.interval(25);
   But_RIGHT.attach(But_Gr, INPUT);
   But_RIGHT.interval(25);
+  But_LEFT.attach(But_Rd, INPUT);
+  But_LEFT.interval(25);
 
   digitalWrite(Sv, HIGH);
-
-  x_s = random(-15, 15);
-  y_s = random(-15, 15);
 
   tft.setRotation(0);
   tft.setSwapBytes(true);
@@ -48,7 +52,11 @@ void setup() {
 }
 /////////////////////////////////////////////// может сделать более одного кораблика?
 void star_shooter_oneship(){
+  while(1){
+    star_game();
 
+    if(But_UP.fell()){break;}
+  }
 
 
 }
@@ -117,15 +125,34 @@ const uint8_t im_ship[] = {
 
 
 
-void star_ship(){
-  tft.drawBitmap(x_s, x_s, im_ship, 32, 14, TFT_GREEN);  //центр x = x+16; y = y-7
+void star_ship(){ 
+  tft.drawBitmap(x_s, y_s, im_ship, 32, 14, TFT_GREEN);  //центр x = x+16; y = y-7
+  
+  x_s = x_s + xvs;
+  y_s = y_s + yvs;
+  
+  
+  if(x_s <=2){
+    xvs = random(1, 15);
+  }
+  if(x_s >=238-32){
+    xvs = random(-15, -1);
+  }
+  if(y_s <=2){
+    yvs = random(1, 15);
+  }
+  if(y_s >=278-14){
+    yvs = random(-15, -1);
+  }
 }
 
 void star_game(){
+  tft.fillScreen(TFT_BLACK);
   int JVX = map(JX, 0, 1024, -20, 20);
   int JVY = map(JY, 0, 1024, -20, 20);
 
   star_aim(x_a, x_a);
+  star_ship();
   x_a = x_a + JVX;
   y_a = y_a + JVY;
   Serial.println("Hi");
@@ -164,19 +191,23 @@ void menu(){
 void loop() {
   But_UP.update();
   But_DOWN.update();
+  But_RIGHT.update();
+  But_LEFT.update();
 
-  star_aim(150, 150);
+  //star_aim(150, 150);
 
-  tft.drawBitmap(150, 150, im_ship, 32, 14, TFT_GREEN);
+  //tft.drawBitmap(150, 150, im_ship, 32, 14, TFT_GREEN);
 //  Serial.println("Hi");
-  menu();
-
+  if(SCREEN[now_scr] == "MENU"){
+    menu();
+  }
   if(But_UP.fell() and SCREEN[now_scr] == "MENU"){
     sel_item--;
     if(sel_item <= 0){
       sel_item = 0;
 
     }
+    Serial.println(11);
     tft.fillScreen(TFT_BLACK);
   }
   if(But_DOWN.fell() and SCREEN[now_scr] == "MENU"){
@@ -184,12 +215,16 @@ void loop() {
     if(sel_item > 1){
       sel_item = 2;
     }
+    Serial.println(1);
     tft.fillScreen(TFT_BLACK);
   }
-  if(But_RIGHT.fell() and sel_item == 0){
+  if(But_RIGHT.fell()){ Serial.println(11111111);}
+  
+  if(But_RIGHT.fell() and sel_item == 0 and SCREEN[now_scr] == "MENU"){
+    now_scr = 1;
     tft.fillScreen(TFT_BLACK);
     
-    star_game();
+    star_shooter_oneship();
     //if(){
 
     //}
