@@ -21,11 +21,38 @@ Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT;
 #define Sv 4
 
 TFT_eSPI tft = TFT_eSPI();
+TFT_eSprite sprite = TFT_eSprite(&tft);
 
 int x_s = random(2, 238-32);
 int y_s = random(2, 278-14);
+int x_s_old = 0;
+int y_s_old = 0;
 int xvs = random(-5, 5);
 int yvs = random(-5, 5);
+
+const uint8_t im_ship[] = {
+  0x00, 0xFF, 0xFC, 0x00,
+  0x00, 0xFF, 0xFC, 0x00,
+  
+  0x0F, 0x30, 0x33, 0xC0,
+  0x0F, 0x30, 0x33, 0xC0,
+  
+  0x3C, 0x30, 0x30, 0xF0,
+  0x3C, 0x30, 0x30, 0xF0,
+  
+  0x03, 0xF0, 0x3F, 0x00,
+  0x03, 0xF0, 0x3F, 0x00,
+  
+  0x00, 0x3F, 0xF0, 0x00,
+  0x00, 0x3F, 0xF0, 0x00,
+  
+  0x00, 0x0F, 0xC0, 0x00,
+  0x00, 0x0F, 0xC0, 0x00,
+  
+  0x00, 0x03, 0x00, 0x00,
+  0x00, 0x03, 0x00, 0x00
+};
+
 
 
 
@@ -44,6 +71,7 @@ void setup() {
 
   digitalWrite(Sv, HIGH);
 
+  sprite.createSprite(32, 14);
   tft.setRotation(0);
   tft.setSwapBytes(true);
   tft.fillScreen(TFT_BLACK);
@@ -67,12 +95,29 @@ void star_start(){
 
 int x_a = 120;
 int y_a = 140;
+int x_a_old = 0;
+int y_a_old = 0;
 
-void star_aim(int x, int y){
-  tft.drawCircle(x, y, 15, TFT_RED);
-  tft.drawRect(x-1, y-1, 3, 3, TFT_RED);
+void star_aim_clear(){
+  tft.drawCircle(x_a_old, y_a_old, 15, TFT_BLACK);
+  tft.drawRect(x_a_old-1, y_a_old-1, 3, 3, TFT_BLACK);
+}
+
+void star_aim_draw(){
+  tft.drawCircle(x_a, y_a, 15, TFT_RED);
+  tft.drawRect(x_a-1, y_a-1, 3, 3, TFT_RED);
+}
+
+void star_aim_update(){
+  int JVX = map(JX, 0, 1024, -20, 20);
+  int JVY = map(JY, 0, 1024, -20, 20);
 
 
+  x_a_old = x_a;
+  y_a_old = y_a;
+  x_a = x_a + JVX;
+  y_a = y_a + JVY;
+  
 }
 /* это в битах
 const uint8_t im_ship[] {
@@ -100,62 +145,39 @@ const uint8_t im_ship[] {
 };
 */ // А это в HEX коде
 
-const uint8_t im_ship[] = {
-  0x00, 0xFF, 0xFC, 0x00,
-  0x00, 0xFF, 0xFC, 0x00,
-  
-  0x0F, 0x30, 0x33, 0xC0,
-  0x0F, 0x30, 0x33, 0xC0,
-  
-  0x3C, 0x30, 0x30, 0xF0,
-  0x3C, 0x30, 0x30, 0xF0,
-  
-  0x03, 0xF0, 0x3F, 0x00,
-  0x03, 0xF0, 0x3F, 0x00,
-  
-  0x00, 0x3F, 0xF0, 0x00,
-  0x00, 0x3F, 0xF0, 0x00,
-  
-  0x00, 0x0F, 0xC0, 0x00,
-  0x00, 0x0F, 0xC0, 0x00,
-  
-  0x00, 0x03, 0x00, 0x00,
-  0x00, 0x03, 0x00, 0x00
-};
+void star_ship_clear(){
+  tft.drawBitmap(x_s_old, y_s_old, im_ship, 32, 14, TFT_BLACK);  //центр x = x+16; y = y-7  
+}
 
+void star_ship_draw(){
+  tft.drawBitmap(x_s, y_s, im_ship, 32, 14, TFT_GREEN);  //центр x = x+16; y = y-7  
+}
 
-
-void star_ship(){ 
-  tft.drawBitmap(x_s, y_s, im_ship, 32, 14, TFT_GREEN);  //центр x = x+16; y = y-7
-  
+void star_ship_update(){ 
+  x_s_old = x_s;
+  y_s_old = y_s;
   x_s = x_s + xvs;
   y_s = y_s + yvs;
   
-  
   if(x_s <=2){
-    xvs = random(1, 15);
+    xvs = random(1, 6);
   }
   if(x_s >=238-32){
-    xvs = random(-15, -1);
+    xvs = random(-6, -1);
   }
   if(y_s <=2){
-    yvs = random(1, 15);
+    yvs = random(1, 6);
   }
   if(y_s >=278-14){
-    yvs = random(-15, -1);
+    yvs = random(-6, -1);
   }
 }
 
 void star_game(){
-  tft.fillScreen(TFT_BLACK);
-  int JVX = map(JX, 0, 1024, -20, 20);
-  int JVY = map(JY, 0, 1024, -20, 20);
+  star_ship_clear();
+  star_ship_update();
+  star_ship_draw();
 
-  star_aim(x_a, x_a);
-  star_ship();
-  x_a = x_a + JVX;
-  y_a = y_a + JVY;
-  Serial.println("Hi");
 }
 
 void star_end(){
