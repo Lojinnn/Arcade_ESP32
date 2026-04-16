@@ -404,5 +404,5 @@
 #define TFT_DC    16
 #define TFT_RST   17
 #define TFT_BL     4
-#define SPI_FREQUENCY  20000000
+#define SPI_FREQUENCY  40000000
 

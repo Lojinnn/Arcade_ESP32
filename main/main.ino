@@ -16,7 +16,7 @@ Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT;
 #define JY 34
 #define But_Wh 26
 #define But_Bl 25
-#define But_Gr 27
+#define But_Gr 14
 #define Sv 4
 
 TFT_eSPI tft = TFT_eSPI();
@@ -128,7 +128,7 @@ void star_game(){
   star_aim(x_a, x_a);
   x_a = x_a + JVX;
   y_a = y_a + JVY;
-
+  Serial.println("Hi");
 }
 
 void star_end(){
@@ -142,9 +142,6 @@ void star_end(){
 ///////////////////////////////////////////////
 
 void menu(){
-
-
-
   tft.setFreeFont(&FreeSans9pt7b);
   tft.setCursor(50, 15);
   tft.print("ARCADE_ESP32");
@@ -171,7 +168,7 @@ void loop() {
   star_aim(150, 150);
 
   tft.drawBitmap(150, 150, im_ship, 32, 14, TFT_GREEN);
-  Serial.println("Hi");
+//  Serial.println("Hi");
   menu();
 
   if(But_UP.fell() and SCREEN[now_scr] == "MENU"){
@@ -191,7 +188,7 @@ void loop() {
   }
   if(But_RIGHT.fell() and sel_item == 0){
     tft.fillScreen(TFT_BLACK);
-   
+    
     star_game();
     //if(){
 
