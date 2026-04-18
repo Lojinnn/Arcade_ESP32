@@ -160,24 +160,25 @@ void star_ship_update(){
   y_s = y_s + yvs;
   
   if(x_s <=2){
-    xvs = random(1, 6);
+    xvs = random(0.1, 1);
   }
   if(x_s >=238-32){
-    xvs = random(-6, -1);
+    xvs = random(-1, -0.1);
   }
   if(y_s <=2){
-    yvs = random(1, 6);
+    yvs = random(0.1, 1);
   }
   if(y_s >=278-14){
-    yvs = random(-6, -1);
+    yvs = random(-1, -0.1);
   }
 }
 
 void star_game(){
+
   star_ship_clear();
   star_ship_update();
   star_ship_draw();
-
+  
 }
 
 void star_end(){
