@@ -150,11 +150,11 @@ const uint8_t im_ship[] {
 };
 */ // А это в HEX коде
 
-
-
-void star_ship_draw(){
+void star_ship_render(){
+  tft.startWrite();
   tft.fillRect(x_s_old, y_s_old, 32, 14, TFT_BLACK);
   ship_sprite.pushSprite(x_s, y_s);
+  tft.endWrite();
 }
 
 void star_ship_update(){ 
@@ -178,15 +178,11 @@ void star_ship_update(){
 }
 
 void star_game(){
-
-  
+  star_ship_render();
   if(millis() - s_tau >= s_update){
     s_tau = millis();
     star_ship_update();
   }
-
- // star_ship_clear();
-  star_ship_draw();
   
 }
 
