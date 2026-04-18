@@ -30,7 +30,7 @@ int y_s_old = 0;
 int xvs = random(-5, 5);
 int yvs = random(-5, 5);
 unsigned long s_tau = 0;
-uint8_t s_update = 25; //в миллисекундах
+uint8_t s_update = 33; //в миллисекундах
 
 const uint8_t im_ship[] = {
   0x00, 0xFF, 0xFC, 0x00,
@@ -178,11 +178,14 @@ void star_ship_update(){
 }
 
 void star_game(){
-  star_ship_render();
-  if(millis() - s_tau >= s_update){
-    s_tau = millis();
-    star_ship_update();
-  }
+
+  if(millis() - s_tau >= s_update) return;
+  s_tau = millis();
+  star_ship_update();
+  
+  
+  ////////рендер
+  star_ship_render();  
   
 }
 
