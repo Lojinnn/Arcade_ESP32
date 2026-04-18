@@ -21,7 +21,7 @@ Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT;
 #define Sv 4
 
 TFT_eSPI tft = TFT_eSPI();
-TFT_eSprite sprite = TFT_eSprite(&tft);
+TFT_eSprite ship_sprite = TFT_eSprite(&tft);
 
 int x_s = random(2, 238-32);
 int y_s = random(2, 278-14);
@@ -30,7 +30,7 @@ int y_s_old = 0;
 int xvs = random(-5, 5);
 int yvs = random(-5, 5);
 unsigned long s_tau = 0;
-uint8_t s_update = 10; //в миллисекундах
+uint8_t s_update = 33; //в миллисекундах
 
 const uint8_t im_ship[] = {
   0x00, 0xFF, 0xFC, 0x00,
@@ -73,12 +73,15 @@ void setup() {
 
   digitalWrite(Sv, HIGH);
 
-  sprite.createSprite(32, 14);
+  ship_sprite.createSprite(32, 14);
+  ship_sprite.setSwapBytes(true);
+  ship_sprite.drawBitmap(0, 0, im_ship, 32, 14, TFT_GREEN);
+
   tft.setRotation(0);
   tft.setSwapBytes(true);
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
-
+  
 }
 /////////////////////////////////////////////// может сделать более одного кораблика?
 void star_shooter_oneship(){
@@ -147,12 +150,11 @@ const uint8_t im_ship[] {
 };
 */ // А это в HEX коде
 
-void star_ship_clear(){
-  tft.drawBitmap(x_s_old, y_s_old, im_ship, 32, 14, TFT_BLACK);  //центр x = x+16; y = y-7  
-}
+
 
 void star_ship_draw(){
-  tft.drawBitmap(x_s, y_s, im_ship, 32, 14, TFT_GREEN);  //центр x = x+16; y = y-7  
+  tft.fillRect(x_s_old, y_s_old, 32, 14, TFT_BLACK);
+  ship_sprite.pushSprite(x_s, y_s);
 }
 
 void star_ship_update(){ 
@@ -162,28 +164,28 @@ void star_ship_update(){
   y_s = y_s + yvs;
   
   if(x_s <=2){
-    xvs = random(1, 6);
+    xvs = random(1, 3);
   }
   if(x_s >=238-32){
-    xvs = random(-6, -1);
+    xvs = random(-3, -1);
   }
   if(y_s <=2){
-    yvs = random(1, 6);
+    yvs = random(1, 3);
   }
   if(y_s >=278-14){
-    yvs = random(-6, -1);
+    yvs = random(-3, -1);
   }
 }
 
 void star_game(){
 
-  star_ship_clear();
   
   if(millis() - s_tau >= s_update){
     s_tau = millis();
     star_ship_update();
   }
 
+ // star_ship_clear();
   star_ship_draw();
   
 }
