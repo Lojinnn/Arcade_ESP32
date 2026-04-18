@@ -93,7 +93,7 @@ void setup() {
 void star_shooter_oneship(){
   while(1){
     star_game();
-
+    But_UP.update();
     if(But_UP.fell()){break;}
   }
 
