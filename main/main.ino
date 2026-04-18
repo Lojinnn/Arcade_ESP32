@@ -30,7 +30,7 @@ int y_s_old = 0;
 int xvs = random(-5, 5);
 int yvs = random(-5, 5);
 unsigned long s_tau = 0;
-uint8_t s_update = 33; //в миллисекундах
+uint8_t s_update = 25; //в миллисекундах
 
 const uint8_t im_ship[] = {
   0x00, 0xFF, 0xFC, 0x00,
