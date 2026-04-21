@@ -110,7 +110,7 @@ int x_a_old = 0;
 int y_a_old = 0;
 
 void star_aim_update(){
-  int JVX = map(analogRead(JX), 3960, 0, -28, 30);
+  int JVX = map(analogRead(JX), 4040, 100, -28, 30);
   int JVY = map(analogRead(JY), 4040, 0, -30, 30);
 
   Serial.println(JVY);
@@ -160,8 +160,8 @@ const uint8_t im_ship[] {
 void star_render(){
   tft.startWrite();
   tft.fillRect(x_s_old, y_s_old, 32, 14, TFT_BLACK);
-  tft.drawCircle(x_a_old+15, y_a_old+15, 15, TFT_BLACK);
-  tft.drawRect(x_a_old+14, y_a_old+14, 3, 3, TFT_BLACK);
+  tft.fillCircle(x_a_old+15, y_a_old+15, 16, TFT_BLACK);
+  //tft.drawRect(x_a_old+14, y_a_old+14, 3, 3, TFT_BLACK);
 
 
   ship_sprite.pushSprite(x_s, y_s);
@@ -190,13 +190,16 @@ void star_ship_update(){
 }
 
 void star_game(){
-
+  But_LEFT.update();
   if(millis() - s_tau < fps) return;
   s_tau = millis();
   star_aim_update();
   star_ship_update();
   
-  
+  if(But_LEFT.fell()){
+    tft.fillCircle(x_a, y_a, 15, TFT_YELLOW);
+  }
+
   ////////рендер
   star_render();  
   
