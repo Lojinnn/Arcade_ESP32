@@ -390,7 +390,7 @@
 
 
 
-
+#define TFT_TRANSPARENT 0x0000
 
 //#define SMOOTH_FONT
 #define ST7789_DRIVER

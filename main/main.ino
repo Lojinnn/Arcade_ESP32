@@ -44,7 +44,7 @@ int yvs = random(-10, 10);
 unsigned int s_hit = 0;
 unsigned long s_tau_hit = 0;
 unsigned long s_tau = 0;
-uint8_t fps = 29; //в миллисекундах
+uint8_t fps = 30; //в миллисекундах
 
 const uint8_t im_ship[] = {
   0x00, 0xFF, 0xFC, 0x00,
@@ -93,14 +93,15 @@ void setup() {
 
   aim_sprite.createSprite(32, 32);
   aim_sprite.setSwapBytes(true);
-  //aim_sprite.fillSprite(TFT_TRANSPARENT);
+  aim_sprite.fillSprite(TFT_TRANSPARENT);
   aim_sprite.drawCircle(15, 15, 15, TFT_RED);
   aim_sprite.drawCircle(15, 15, 14, TFT_RED);  
   aim_sprite.drawRect(14, 14, 3, 3, TFT_RED);
   
   aim_sprite_fire.createSprite(32, 32);
+  Serial.printf("Sprite created: %d bytes\n", 32*32*2); 
   aim_sprite_fire.setSwapBytes(true);
-  //aim_sprite_fire.fillSprite(TFT_TRANSPARENT);
+  aim_sprite_fire.fillSprite(TFT_TRANSPARENT);
   aim_sprite_fire.fillCircle(15, 15, 15, TFT_YELLOW);  
   aim_sprite_fire.drawCircle(15, 15, 15, TFT_RED);
   aim_sprite_fire.drawCircle(15, 15, 14, TFT_RED);  
@@ -117,9 +118,10 @@ void setup() {
 void star_shooter_oneship(){
   //tft.setFreeFont(&FreeSans9pt7b);
   while(1){
-    star_game();
     But_LEFT.update();
-    But_UP.update();
+    But_UP.update();    
+    star_game();
+
  
     if(But_UP.fell()){break;}
   }
@@ -232,7 +234,7 @@ void star_game(){
     aim_tau = millis();
     Serial.println("FIRE");
   }
-
+  Serial.println(digitalRead(But_Rd));
   if(aim_fire and millis() - aim_tau >= aim_fire_time){
     aim_fire = false;
   }
