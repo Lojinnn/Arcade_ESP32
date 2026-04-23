@@ -163,7 +163,7 @@ void star_shooter_oneship(){
     }
     if(star_menu >=3){star_menu = 0;}
 
-    if(But_UP.fell()){now_scr = 0; break;}
+    if(But_UP.fell()){now_scr = 0; tft.fillScreen(TFT_BLACK); break;}
   }
 }
 
