@@ -23,7 +23,12 @@ Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT;
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite ship_sprite = TFT_eSprite(&tft);
 TFT_eSprite aim_sprite = TFT_eSprite(&tft);
-
+TFT_eSprite aim_sprite_fire = TFT_eSprite(&tft);
+//для выстрела
+bool aim_fire = false;
+unsigned long aim_tau = 0;
+uint8_t aim_fire_time = 100;     //в миллисекундах
+//
 int x_s = random(2, 238-32);
 int y_s = random(2, 278-14);
 int x_s_old = 0;
@@ -82,6 +87,11 @@ void setup() {
   aim_sprite.setSwapBytes(true);
   aim_sprite.drawCircle(15, 15, 15, TFT_RED);
   aim_sprite.drawRect(14, 14, 3, 3, TFT_RED);
+  
+  aim_sprite_fire.createSprite(32, 32);
+  aim_sprite_fire.setSwapBytes(true);
+  aim_sprite_fire.fillCircle(15, 15, 15, TFT_YELLOW);
+
 
   tft.setRotation(0);
   tft.setSwapBytes(true);
@@ -93,11 +103,21 @@ void setup() {
 void star_shooter_oneship(){
   while(1){
     star_game();
+    But_LEFT.update();
     But_UP.update();
-    if(But_UP.fell()){break;}
+ 
+  if(But_LEFT.fell()){
+    aim_fire = true;
+    aim_tau = millis();
+    Serial.println("Hi");
   }
 
-
+  if(aim_fire and millis() - aim_tau >= aim_fire_time){
+    aim_fire = false;
+  }
+ 
+    if(But_UP.fell()){break;}
+  }
 }
 
 void star_start(){
@@ -113,22 +133,20 @@ void star_aim_update(){
   int JVX = map(analogRead(JX), 4040, 100, -28, 30);
   int JVY = map(analogRead(JY), 4040, 0, -30, 30);
 
-  Serial.println(JVY);
-  x_a_old = x_a;
-  y_a_old = y_a;
+  Serial.println(x_a);
   x_a = x_a + JVX;
   y_a = y_a + JVY;
-  if(2 >= x_a-16){
-    x_a = 2+16;
+  if(2 >= x_a){
+    x_a = 2;
   }
-  if(238 <= x_a+16){
-    x_a = 238-16;
+  if(238 <= x_a){
+    x_a = 206;
   }
-  if(2 >= y_a-16){
-    y_a = 2+16;
+  if(2 >= y_a){
+    y_a = 2;
   }
-  if(278 <= y_a+16){
-    y_a = 278-16;
+  if(278 <= y_a){
+    y_a = 246;
   }
 }
 /* это в битах
@@ -157,15 +175,25 @@ const uint8_t im_ship[] {
 };
 */ // А это в HEX коде
 
+void star_aim_prerender(){
+  tft.fillCircle(x_a_old+15, y_a_old+15, 16, TFT_BLACK);
+  
+  x_a_old = x_a;
+  y_a_old = y_a;
+  
+  TFT_eSprite* active_aim = aim_fire ? &aim_sprite_fire : &aim_sprite;
+  active_aim->pushSprite(x_a, y_a);
+}
+
 void star_render(){
   tft.startWrite();
   tft.fillRect(x_s_old, y_s_old, 32, 14, TFT_BLACK);
-  tft.fillCircle(x_a_old+15, y_a_old+15, 16, TFT_BLACK);
+
   //tft.drawRect(x_a_old+14, y_a_old+14, 3, 3, TFT_BLACK);
-
-
   ship_sprite.pushSprite(x_s, y_s);
-  aim_sprite.pushSprite(x_a, y_a);  
+
+  star_aim_prerender();
+
   tft.endWrite();
 }
 
@@ -190,15 +218,12 @@ void star_ship_update(){
 }
 
 void star_game(){
-  But_LEFT.update();
   if(millis() - s_tau < fps) return;
   s_tau = millis();
   star_aim_update();
   star_ship_update();
-  
-  if(But_LEFT.fell()){
-    tft.fillCircle(x_a, y_a, 15, TFT_YELLOW);
-  }
+    
+
 
   ////////рендер
   star_render();  
