@@ -1,16 +1,27 @@
+/*
+  заметки:
+    freeFonts: &FreeSans9pt7b; &FreeSans12pt7b; &FreeSans18pt7b; &FreeSans24pt7b;
+
+
+
+
+
+
+*/
+
 #include <Bounce2.h>
 
 #include <SPI.h>
 #include <TFT_eSPI.h>
 
 uint16_t text_h = 25;
-uint16_t start_text_y = 70;
+uint16_t start_text_y = 100;
 int sel_item = 0;
 
 int now_scr = 0;
 const char* SCREEN[] = {"MENU", "STAR_SHOOTER", "OPTIONS", "HIGH_SCORES"};
-const char* Menu_str[] = {"Star shooter", "Options", "Your game statistics"};
-Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT;
+const char* Menu_str[] = {"Star shooter", "Options", "Game statistics"};
+Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT = Bounce();
 
 #define JX 35
 #define JY 34
@@ -32,9 +43,14 @@ TFT_eSprite aim_sprite = TFT_eSprite(&tft);
 TFT_eSprite aim_sprite_fire = TFT_eSprite(&tft);
 //для выстрела
 bool aim_fire = false;
+bool star_aim_fire = false;
 unsigned long aim_tau = 0;
 uint8_t aim_fire_time = 150;     //в миллисекундах
 //
+const short rand_s[] = {-2, -1, 1, 2}; //трогать только края (кроме хард мода)
+
+short star_menu = 0;
+bool flag_hold = false;
 int x_s = random(2, 238-32);
 int y_s = random(2, 278-14);
 int x_s_old = 0;
@@ -71,7 +87,6 @@ const uint8_t im_ship[] = {
 
 
 
-
 void setup() {
   Serial.begin(115200);
   tft.init();
@@ -93,7 +108,6 @@ void setup() {
 
   aim_sprite.createSprite(32, 32);
   aim_sprite.setSwapBytes(true);
-  aim_sprite.fillSprite(TFT_TRANSPARENT);
   aim_sprite.drawCircle(15, 15, 15, TFT_RED);
   aim_sprite.drawCircle(15, 15, 14, TFT_RED);  
   aim_sprite.drawRect(14, 14, 3, 3, TFT_RED);
@@ -101,11 +115,7 @@ void setup() {
   aim_sprite_fire.createSprite(32, 32);
   Serial.printf("Sprite created: %d bytes\n", 32*32*2); 
   aim_sprite_fire.setSwapBytes(true);
-  aim_sprite_fire.fillSprite(TFT_TRANSPARENT);
   aim_sprite_fire.fillCircle(15, 15, 15, TFT_YELLOW);  
-  aim_sprite_fire.drawCircle(15, 15, 15, TFT_RED);
-  aim_sprite_fire.drawCircle(15, 15, 14, TFT_RED);  
-  aim_sprite_fire.drawRect(14, 14, 3, 3, TFT_RED);
 
 
   tft.setRotation(0);
@@ -116,19 +126,51 @@ void setup() {
 }
 /////////////////////////////////////////////// может сделать более одного кораблика?
 void star_shooter_oneship(){
-  //tft.setFreeFont(&FreeSans9pt7b);
   while(1){
     But_LEFT.update();
     But_UP.update();    
-    star_game();
+    But_RIGHT.update();
 
- 
-    if(But_UP.fell()){break;}
+    if(But_RIGHT.read() == HIGH and But_RIGHT.currentDuration() > 1500){
+      flag_hold = true;
+    }
+    if(flag_hold and But_RIGHT.read() == LOW){
+      star_menu = star_menu + 1;
+      tft.fillScreen(TFT_BLACK);  
+      flag_hold = false;
+    }
+    Serial.println(star_menu);
+    if(star_menu == 0){
+      star_start();
+    }  
+
+    if(star_menu == 1){   
+      tft.setFreeFont(&FreeSans9pt7b);
+      star_game();
+      if(But_LEFT.fell()){
+        aim_fire = true;
+        aim_tau = millis();
+        Serial.println("FIRE");
+      }
+      if(aim_fire and millis() - aim_tau >= aim_fire_time){
+        aim_fire = false;
+      }
+      if(But_LEFT.fell()){star_aim_fire = true;}  
+    }   
+
+    if(star_menu == 2){
+      star_end();
+    }
+    if(star_menu >=3){star_menu = 0;}
+
+    if(But_UP.fell()){now_scr = 0; break;}
   }
 }
 
 void star_start(){
-
+  tft.setFreeFont(&FreeSans24pt7b);
+  tft.setCursor(20, 70);
+  tft.print("!START!");
 }
 
 int x_a = 120;
@@ -209,17 +251,24 @@ void star_ship_update(){
   x_s = x_s + xvs;
   y_s = y_s + yvs;
   
+  if(s_hit){
+    x_s = random(2, 238-32);
+    y_s = random(2, 278-14);
+    xvs = random(rand_s[0], rand_s[-1]);
+    yvs = random(rand_s[0], rand_s[-1]);
+  }
+
   if(x_s <=2){
-    xvs = random(1, 10);
+    xvs = random(rand_s[2], rand_s[-1]);     ///////1, 10
   }
   if(x_s >=238-32){
-    xvs = random(-10, -1);
+    xvs = random(rand_s[0], rand_s[1]);
   }
   if(y_s <=2){
-    yvs = random(1, 10);
+    yvs = random(rand_s[2], rand_s[-1]);
   }
   if(y_s >=278-14){
-    yvs = random(-10, -1);
+    yvs = random(rand_s[0], rand_s[1]);
   }
 }
 
@@ -229,45 +278,38 @@ void star_game(){
   star_aim_update();
   star_ship_update();
     
-  if(But_LEFT.fell()){
-    aim_fire = true;
-    aim_tau = millis();
-    Serial.println("FIRE");
+  tft.setCursor(30, 30);
+  tft.print(star_score);
+
+  if((star_aim_fire and x_s+16 >= x_a and x_s+16 <= x_a+16 and y_s+7 >= y_a and y_s+7 <= y_a+16) or
+     (star_aim_fire and x_s+16 >= x_a+16 and x_s+16 <= x_a+32 and y_s+7 >= y_a and y_s+7 <= y_a+16) or
+     (star_aim_fire and x_s+16 >= x_a and x_s+16 <= x_a+16 and y_s+7 >= y_a+16 and y_s+7 <= y_a+32) or
+     (star_aim_fire and x_s+16 >= x_a+16 and x_s+16 <= x_a+32 and y_s+7 >= y_a+16 and y_s+7 <= y_a+32)) {  
+    star_score++;
+    s_hit = true;
+    s_tau_hit = millis();
+    star_aim_fire = false;
   }
-  Serial.println(digitalRead(But_Rd));
-  if(aim_fire and millis() - aim_tau >= aim_fire_time){
-    aim_fire = false;
+  else{star_aim_fire = false;}
+
+  if(s_hit){
+    tft.fillScreen(TFT_BLACK);
   }
 
- // tft.setCursor(30, 30);
- // tft.print(star_score);
-
-  //if((aim_fire and x_s+16 >= x_a and x_s+16 <= x_a+16 and y_s+7 >= y_a and y_s+7 <= y_a+16) or
-  //   (aim_fire and x_s+16 >= x_a+16 and x_s+16 <= x_a+32 and y_s+7 >= y_a and y_s+7 <= y_a+16) or
-  //   (aim_fire and x_s+16 >= x_a and x_s+16 <= x_a+16 and y_s+7 >= y_a+16 and y_s+7 <= y_a+32) or
- //    (aim_fire and x_s+16 >= x_a+16 and x_s+16 <= x_a+32 and y_s+7 >= y_a+16 and y_s+7 <= y_a+32)){
- //   star_score++;
-
- //   s_hit = true;
- //   s_tau_hit = millis();
- // }
-
-  //if(s_hit){
- //   tft.fillScreen(TFT_BLACK);
-  //}
-
- // if(s_hit and millis() - s_tau_hit >= 300){
-  //  s_hit = false;
-  //}
+  if(s_hit and millis() - s_tau_hit >= 300){
+    s_hit = false;
+  }
+  
   ////////рендер
   star_render();  
-  
+  ////////
 }
 
 void star_end(){
 
-
-
+  tft.setFreeFont(&FreeSans24pt7b);
+  tft.setCursor(50, 80);
+  tft.print("!END!");
 }
 
 
@@ -275,10 +317,10 @@ void star_end(){
 ///////////////////////////////////////////////
 
 void menu(){
-  tft.setFreeFont(&FreeSans9pt7b);
-  tft.setCursor(50, 15);
+  tft.setFreeFont(&FreeSans12pt7b);
+  tft.setCursor(20, 30);
   tft.print("ARCADE_ESP32");
-
+  tft.setFreeFont(&FreeSans9pt7b);
  for(int i = 0; i < 3; i++){
     uint16_t yPos = start_text_y + (i * text_h);
     
