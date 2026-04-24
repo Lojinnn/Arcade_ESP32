@@ -201,7 +201,7 @@ void star_shooter_oneship(){
     }
     if(star_menu >=3){star_menu = 0;}
 
-    if(But_UP.fell()){now_scr = 0; tft.fillScreen(TFT_BLACK); star_save(star_score); break;}
+    if(But_UP.fell()){now_scr = 0; tft.fillScreen(TFT_BLACK); star_save(star_score); star_menu = 0; break;}
   }
 }
 
@@ -265,8 +265,8 @@ const uint8_t im_ship[] {
 */ // А это в HEX коде
 
 void star_aim_prerender(){
-  tft.drawCircle(x_a_old, y_a_old, 15, TFT_BLACK);
-  tft.drawCircle(x_a_old, y_a_old, 14, TFT_BLACK);
+  tft.fillRect(x_a_old, y_a_old, 32, 32, TFT_BLACK);
+
   tft.fillRect(x_a_old-1, y_a_old-1, 3, 3, TFT_BLACK);
 
   x_a_old = x_a;
