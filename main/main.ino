@@ -9,16 +9,33 @@
 
 #include <Bounce2.h>
 
+//////////////// память
+#include <Preferences.h>
+Preferences prefs;
+
+
+
+///////////////////////////////////
+
 #include <SPI.h>
 #include <TFT_eSPI.h>
-
+//////////для меню
 uint16_t text_h = 25;
 uint16_t start_text_y = 100;
 int sel_item = 0;
+///////////////////////////////////
+
+////////////////////////////////для статы
+uint8_t st_text_h = 30;
+uint16_t st_start_text_y = 50;
+short st_sel_item = 0;
+
+////////////////////////////////
 
 int now_scr = 0;
 const char* SCREEN[] = {"MENU", "STAR_SHOOTER", "OPTIONS", "HIGH_SCORES"};
 const char* Menu_str[] = {"Star shooter", "Options", "Game statistics"};
+const char* Stat_str[] = {"Star shooter", "Arkanoid", "Ping pong", "Pacman"};
 Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT = Bounce();
 
 #define JX 35
@@ -31,6 +48,7 @@ Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT = Bounce();
 
 ////////////// очки игр
 unsigned int star_score;
+unsigned int star_high_score;
 
 
 //////////////////
@@ -87,6 +105,7 @@ const uint8_t im_ship[] = {
 
 void setup() {
   Serial.begin(115200);
+
   tft.init();
 
   But_UP.attach(But_Wh, INPUT);    
@@ -120,8 +139,29 @@ void setup() {
   tft.setSwapBytes(true);
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+  load_data();
   
 }
+
+void load_data(){
+  prefs.begin("esp_arcade_confg", false);
+  star_high_score = prefs.getUInt("st_hs", 0);
+  ////////// если нужно что-то сохранить, то пихай сюда
+
+  prefs.end();
+}
+
+void star_save(unsigned int new_score){
+  if(star_high_score < new_score){
+    star_high_score = new_score;
+    prefs.begin("esp_arcade_confg", false);
+    prefs.getUInt("st_hs", star_high_score);
+    prefs.end();
+    Serial.println("Save!");   ////для отладки
+  }
+}
+
 /////////////////////////////////////////////// может сделать более одного кораблика?
 void star_shooter_oneship(){
   while(1){
@@ -161,7 +201,7 @@ void star_shooter_oneship(){
     }
     if(star_menu >=3){star_menu = 0;}
 
-    if(But_UP.fell()){now_scr = 0; tft.fillScreen(TFT_BLACK); break;}
+    if(But_UP.fell()){now_scr = 0; tft.fillScreen(TFT_BLACK); star_save(star_score); break;}
   }
 }
 
@@ -343,6 +383,24 @@ void menu(){
 
 }
 
+void statistics(){
+  tft.setFreeFont(&FreeSans12pt7b);
+
+
+
+ for(int i = 0; i < 3; i++){
+    uint16_t yPos = st_start_text_y + (i * st_text_h);
+    
+    tft.setCursor(20, yPos);
+    tft.print(Stat_str[i]);
+
+    if(i == st_sel_item){
+      tft.drawRect(10, yPos-15, 185, 20, TFT_YELLOW);
+    }
+
+  }
+}
+
 void loop() {
   But_UP.update();
   But_DOWN.update();
@@ -373,7 +431,9 @@ void loop() {
     Serial.println(1);
     tft.fillScreen(TFT_BLACK);
   }
-  if(But_RIGHT.fell()){ Serial.println(11111111);}
+
+
+
   /////////игра
   if(But_RIGHT.fell() and sel_item == 0 and SCREEN[now_scr] == "MENU"){
     now_scr = 1;
