@@ -167,8 +167,11 @@ void star_shooter_oneship(){
 
 void star_start(){
   tft.setFreeFont(&FreeSans24pt7b);
-  tft.setCursor(20, 70);
+  tft.setCursor(20, 120);
   tft.print("!START!");
+  tft.setFreeFont(&FreeSans9pt7b);
+  tft.setCursor(20, 170);
+  tft.print("Star shooter 2026");
 }
 
 int x_a = 120;
@@ -222,8 +225,10 @@ const uint8_t im_ship[] {
 */ // А это в HEX коде
 
 void star_aim_prerender(){
-  tft.fillRect(x_a_old, y_a_old, 32, 32, TFT_BLACK);
-  
+  tft.drawCircle(x_a_old, y_a_old, 15, TFT_BLACK);
+  tft.drawCircle(x_a_old, y_a_old, 14, TFT_BLACK);
+  tft.fillRect(x_a_old-1, y_a_old-1, 3, 3, TFT_BLACK);
+
   x_a_old = x_a;
   y_a_old = y_a;
   
@@ -308,6 +313,10 @@ void star_end(){
   tft.setFreeFont(&FreeSans24pt7b);
   tft.setCursor(50, 80);
   tft.print("!END!");
+  
+  tft.setFreeFont(&FreeSans9pt7b);
+  tft.setCursor(20, 160);
+  tft.print("Your score = " + String(star_score));
 }
 
 
@@ -365,18 +374,16 @@ void loop() {
     tft.fillScreen(TFT_BLACK);
   }
   if(But_RIGHT.fell()){ Serial.println(11111111);}
-  
+  /////////игра
   if(But_RIGHT.fell() and sel_item == 0 and SCREEN[now_scr] == "MENU"){
     now_scr = 1;
     tft.fillScreen(TFT_BLACK);
     
     star_shooter_oneship();
-    //if(){
 
-    //}
     
   }
-  
+  ////////////
 
 }
 
