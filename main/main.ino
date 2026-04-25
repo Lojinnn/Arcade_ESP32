@@ -28,7 +28,7 @@ int sel_item = 0;
 
 
 ////////////////////////////////для статы
-uint8_t st_text_h = 36;
+uint8_t st_text_h = 30;
 uint16_t st_start_text_y = 120;
 short st_sel_item = -1;
 ////////////////////////////////
@@ -49,6 +49,7 @@ Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT = Bounce();
 
 ////////////// очки игр
 unsigned int star_score;
+unsigned int star_all_score;
 unsigned int star_high_score;
 
 //////////////////
@@ -76,6 +77,10 @@ int yvs = random(-10, 10);
 unsigned int s_hit = 0;
 unsigned long s_tau_hit = 0;
 unsigned long s_tau = 0;
+unsigned long start_timer = 0;
+unsigned long star_time = 0;
+bool timer_running = false;
+
 uint8_t fps = 30; //в миллисекундах
 
 const uint8_t im_ship[] = {
@@ -145,32 +150,50 @@ void setup() {
 }
 
 void load_data(){
-  prefs.begin("esp_arcade_confg", false);
+  prefs.begin("conf1", false);
   star_high_score = prefs.getUInt("st_hs", 0);
- 
+  star_all_score = prefs.getUInt("st_all_sc", 0);
 
   prefs.end();
-  Serial.println("Load!");  
-  Serial.println(star_high_score);  
+  //Serial.println("Load!");  
 }
 
 void star_save(unsigned int new_score){
+  prefs.begin("conf1", false);
+  star_all_score = new_score + star_all_score;
+  prefs.putUInt("st_all_sc", star_all_score);
   if(star_high_score < new_score){
     star_high_score = new_score;
-    prefs.begin("esp_arcade_confg", false);
+    
     prefs.putUInt("st_hs", star_high_score);
-    Serial.printf("Written: %u\n", prefs.getUInt("st_hs", 999));
-    prefs.end();
-    Serial.println("Save!");   ////для отладки
-    Serial.printf("Saved: hs = %u\n", star_high_score);  
+    
+    //Serial.println("Save!");   ////для отладки
   }
+  prefs.end();
 }
 
 /////////////////////////////////////////////// может сделать более одного кораблика?
+
+
+void star_timet_stop(){
+  if(timer_running){
+    star_time = millis() - star_timer;
+    timer_running = false;
+  }
+}
+
+void star_timer_update(){
+  if(timer_running){
+    star_time = millis() - star_timer;
+  }
+}
+
 void star_shooter_oneship(){
   star_score = 0;
+  star_timer = millis();
+  timer_running = true;
   while(1){
-    But_LEFT.update();
+  
     But_UP.update();    
     But_RIGHT.update();
 
@@ -198,7 +221,6 @@ void star_shooter_oneship(){
       if(aim_fire and millis() - aim_tau >= aim_fire_time){
         aim_fire = false;
       }
-      if(But_LEFT.fell()){star_aim_fire = true;}  
     }   
 
     if(star_menu == 2){
@@ -212,6 +234,7 @@ void star_shooter_oneship(){
 }
 
 void star_start(){
+  timer_running = false;
   tft.setFreeFont(&FreeSans24pt7b);
   tft.setCursor(20, 120);
   tft.print("!START!");
@@ -303,18 +326,18 @@ void star_ship_update(){
   if(s_hit){
     x_s = random(2, 238-32);
     y_s = random(2, 278-14);
-    xvs = random(rand_s[0], rand_s[-1]);
-    yvs = random(rand_s[0], rand_s[-1]);
+    xvs = random(rand_s[0], rand_s[3]);
+    yvs = random(rand_s[0], rand_s[3]);
   }
 
   if(x_s <=2){
-    xvs = random(rand_s[2], rand_s[-1]);     ///////1, 10
+    xvs = random(rand_s[2], rand_s[3]);     ///////1, 10
   }
   if(x_s >=238-32){
     xvs = random(rand_s[0], rand_s[1]);
   }
   if(y_s <=2){
-    yvs = random(rand_s[2], rand_s[-1]);
+    yvs = random(rand_s[2], rand_s[3]);
   }
   if(y_s >=278-14){
     yvs = random(rand_s[0], rand_s[1]);
@@ -323,6 +346,8 @@ void star_ship_update(){
 
 void star_game(){
   if(millis() - s_tau < fps) return;
+  timer_running = true;
+  But_LEFT.update();
   s_tau = millis();
   star_aim_update();
   star_ship_update();
@@ -330,16 +355,14 @@ void star_game(){
   tft.setCursor(30, 30);
   tft.print(star_score);
 
-  if((star_aim_fire and x_s+16 >= x_a and x_s+16 <= x_a+16 and y_s+7 >= y_a and y_s+7 <= y_a+16) or
-     (star_aim_fire and x_s+16 >= x_a+16 and x_s+16 <= x_a+32 and y_s+7 >= y_a and y_s+7 <= y_a+16) or
-     (star_aim_fire and x_s+16 >= x_a and x_s+16 <= x_a+16 and y_s+7 >= y_a+16 and y_s+7 <= y_a+32) or
-     (star_aim_fire and x_s+16 >= x_a+16 and x_s+16 <= x_a+32 and y_s+7 >= y_a+16 and y_s+7 <= y_a+32)) {  
+  if((But_LEFT.fell() and x_s+16 >= x_a and x_s+16 <= x_a+16 and y_s+7 >= y_a and y_s+7 <= y_a+16) or
+     (But_LEFT.fell() and x_s+16 >= x_a+16 and x_s+16 <= x_a+32 and y_s+7 >= y_a and y_s+7 <= y_a+16) or
+     (But_LEFT.fell() and x_s+16 >= x_a and x_s+16 <= x_a+16 and y_s+7 >= y_a+16 and y_s+7 <= y_a+32) or
+     (But_LEFT.fell() and x_s+16 >= x_a+16 and x_s+16 <= x_a+32 and y_s+7 >= y_a+16 and y_s+7 <= y_a+32)) {  
     star_score++;
     s_hit = true;
     s_tau_hit = millis();
-    star_aim_fire = false;
   }
-  else{star_aim_fire = false;}
 
   if(s_hit){
     tft.fillScreen(TFT_BLACK);
@@ -355,7 +378,7 @@ void star_game(){
 }
 
 void star_end(){
-
+  timer_running = false;
   tft.setFreeFont(&FreeSans24pt7b);
   tft.setCursor(50, 80);
   tft.print("!END!");
@@ -411,7 +434,7 @@ void statistics(){
     tft.print(Stat_str[i]);
 
     if(i == st_sel_item){
-      tft.drawRect(10, yPos-15, 185, 20, TFT_YELLOW);
+      tft.drawRect(10, yPos-20, 185, 25, TFT_YELLOW);
     }
 
   }
@@ -489,6 +512,42 @@ void loop() {
       tft.fillScreen(TFT_BLACK);
     }
 
+    if(But_RIGHT.fell() and st_sel_item == 4){
+      now_scr = -1;
+      tft.fillScreen(TFT_BLACK);
+      tft.setFreeFont(&FreeSans12pt7b);
+      tft.setTextColor(TFT_RED);
+      tft.setCursor(20, 100);
+      tft.print("If you want to reset");
+      tft.setCursor(20, 125);
+      tft.print("click red button");
+      while(1){
+        But_UP.update();
+        But_DOWN.update();
+        But_LEFT.update();
+        But_RIGHT.update();
+        
+        if(But_LEFT.fell()){
+          prefs.begin("conf1", false);
+          /////////подтираем только данные игр
+          prefs.remove("st_hs");
+          prefs.remove("st_all_sc");
+
+          prefs.end();
+          now_scr = 0;
+          st_sel_item = -1;
+          tft.fillScreen(TFT_BLACK);
+          break;
+        }
+        if(But_UP.fell() or But_DOWN.fell() or But_RIGHT.fell()){
+          now_scr = 2; 
+          st_sel_item = -1; 
+          tft.fillScreen(TFT_BLACK);
+          break;
+        }
+      }
+    }
+
     if(But_RIGHT.fell() and st_sel_item == 0){
       now_scr = -1;
       load_data();
@@ -506,6 +565,11 @@ void loop() {
         tft.print("Record score ");
         tft.setCursor(140, 70);
         tft.print(star_high_score);
+
+        tft.setCursor(10, 90);
+        tft.print("All score ");
+        tft.setCursor(140, 90);
+        tft.print(star_all_score);
 
         if(But_UP.fell()){tft.fillScreen(TFT_BLACK); st_sel_item = -1; now_scr = 2; break;}
       }
