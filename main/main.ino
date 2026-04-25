@@ -33,9 +33,9 @@ short st_sel_item = 0;
 ////////////////////////////////
 
 int now_scr = 0;
-const char* SCREEN[] = {"MENU", "STAR_SHOOTER", "OPTIONS", "HIGH_SCORES"};
-const char* Menu_str[] = {"Star shooter", "Options", "Game statistics"};
-const char* Stat_str[] = {"Star shooter", "Arkanoid", "Ping pong", "Pacman"};
+const char* SCREEN[] = {"MENU", "STAR_SHOOTER", "STATISTICS", "OPTIONS"};
+const char* Menu_str[] = {"Star shooter", "Game statistics", "Options"};
+const char* Stat_str[] = {"Star shooter", "Arkanoid", "Ping pong", "Pacman", "Reset"};
 Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT = Bounce();
 
 #define JX 35
@@ -374,6 +374,7 @@ void menu(){
     tft.setCursor(20, yPos);
     tft.print(Menu_str[i]);
 
+
     if(i == sel_item){
       tft.drawRect(10, yPos-15, 185, 20, TFT_YELLOW);
     }
@@ -388,8 +389,15 @@ void statistics(){
 
 
 
- for(int i = 0; i < 3; i++){
+ for(int i = 0; i < 5; i++){
     uint16_t yPos = st_start_text_y + (i * st_text_h);
+
+    if(i == 4){
+      tft.setTextColor(TFT_RED);
+    }
+    else{
+      tft.setTextColor(TFT_WHITE);
+    }
     
     tft.setCursor(20, yPos);
     tft.print(Stat_str[i]);
@@ -410,10 +418,20 @@ void loop() {
   //star_aim(150, 150);
 
   //tft.drawBitmap(150, 150, im_ship, 32, 14, TFT_GREEN);
-
+//////////////////////экраны
   if(SCREEN[now_scr] == "MENU"){
     menu();
   }
+
+  if(SCREEN[now_scr] == "STAR_SHOOTER"){
+    star_shooter_oneship();
+  }
+
+  if(SCREEN[now_scr] == "STATISTICS"){
+    statistics();
+  }
+//////////////////////
+/////////////////////для меню  
   if(But_UP.fell() and SCREEN[now_scr] == "MENU"){
     sel_item--;
     if(sel_item <= 0){
@@ -431,19 +449,39 @@ void loop() {
     Serial.println(1);
     tft.fillScreen(TFT_BLACK);
   }
+///////////////////
 
+////////////////////////////для статы
+
+  if(But_UP.fell() and SCREEN[now_scr] == "STATISTICS"){
+    st_sel_item--;
+    if(st_sel_item <= 0){
+      st_sel_item = 0; 
+    }
+    tft.fillScreen(TFT_BLACK);
+  }
+
+  if(But_DOWN.fell() and SCREEN[now_scr] == "STATISTICS"){
+    st_sel_item++;
+    if(st_sel_item >= 4){
+      st_sel_item = 4; 
+    }
+    tft.fillScreen(TFT_BLACK);
+  }
+
+  if(But_RIGHT.fell() and sel_item == 1 and SCREEN[now_scr] == "MENU"){
+    now_scr = 2;
+    tft.fillScreen(TFT_BLACK);
+  }
+
+////////////////////////////
 
 
   /////////игра
   if(But_RIGHT.fell() and sel_item == 0 and SCREEN[now_scr] == "MENU"){
     now_scr = 1;
-    tft.fillScreen(TFT_BLACK);
-    
-    star_shooter_oneship();
-
-    
+    tft.fillScreen(TFT_BLACK);  
   }
   ////////////
 
 }
-
