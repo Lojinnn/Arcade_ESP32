@@ -1,7 +1,8 @@
 /*
   заметки:
     freeFonts: &FreeSans9pt7b; &FreeSans12pt7b; &FreeSans18pt7b; &FreeSans24pt7b;
-
+    
+    снизь нагрузку на проц в меню
 
 
 
@@ -25,11 +26,11 @@ uint16_t start_text_y = 100;
 int sel_item = 0;
 ///////////////////////////////////
 
-////////////////////////////////для статы
-uint8_t st_text_h = 30;
-uint16_t st_start_text_y = 50;
-short st_sel_item = 0;
 
+////////////////////////////////для статы
+uint8_t st_text_h = 36;
+uint16_t st_start_text_y = 120;
+short st_sel_item = -1;
 ////////////////////////////////
 
 int now_scr = 0;
@@ -49,7 +50,6 @@ Bounce But_UP, But_DOWN, But_RIGHT, But_LEFT = Bounce();
 ////////////// очки игр
 unsigned int star_score;
 unsigned int star_high_score;
-
 
 //////////////////
 
@@ -147,23 +147,28 @@ void setup() {
 void load_data(){
   prefs.begin("esp_arcade_confg", false);
   star_high_score = prefs.getUInt("st_hs", 0);
-  ////////// если нужно что-то сохранить, то пихай сюда
+ 
 
   prefs.end();
+  Serial.println("Load!");  
+  Serial.println(star_high_score);  
 }
 
 void star_save(unsigned int new_score){
   if(star_high_score < new_score){
     star_high_score = new_score;
     prefs.begin("esp_arcade_confg", false);
-    prefs.getUInt("st_hs", star_high_score);
+    prefs.putUInt("st_hs", star_high_score);
+    Serial.printf("Written: %u\n", prefs.getUInt("st_hs", 999));
     prefs.end();
     Serial.println("Save!");   ////для отладки
+    Serial.printf("Saved: hs = %u\n", star_high_score);  
   }
 }
 
 /////////////////////////////////////////////// может сделать более одного кораблика?
 void star_shooter_oneship(){
+  star_score = 0;
   while(1){
     But_LEFT.update();
     But_UP.update();    
@@ -201,8 +206,9 @@ void star_shooter_oneship(){
     }
     if(star_menu >=3){star_menu = 0;}
 
-    if(But_UP.fell()){now_scr = 0; tft.fillScreen(TFT_BLACK); star_save(star_score); star_menu = 0; break;}
+    if(But_UP.fell()){now_scr = 0; tft.fillScreen(TFT_BLACK); star_menu = 0; break;}
   }
+  star_save(star_score);
 }
 
 void star_start(){
@@ -385,11 +391,13 @@ void menu(){
 }
 
 void statistics(){
+  tft.setFreeFont(&FreeSans18pt7b);
+  tft.setTextColor(TFT_CYAN);
+  tft.setCursor(2, 55);
+  tft.print("Your Statistics");
+
   tft.setFreeFont(&FreeSans12pt7b);
-
-
-
- for(int i = 0; i < 5; i++){
+  for(int i = 0; i < 5; i++){
     uint16_t yPos = st_start_text_y + (i * st_text_h);
 
     if(i == 4){
@@ -415,9 +423,6 @@ void loop() {
   But_RIGHT.update();
   But_LEFT.update();
 
-  //star_aim(150, 150);
-
-  //tft.drawBitmap(150, 150, im_ship, 32, 14, TFT_GREEN);
 //////////////////////экраны
   if(SCREEN[now_scr] == "MENU"){
     menu();
@@ -431,57 +436,91 @@ void loop() {
     statistics();
   }
 //////////////////////
-/////////////////////для меню  
-  if(But_UP.fell() and SCREEN[now_scr] == "MENU"){
-    sel_item--;
-    if(sel_item <= 0){
-      sel_item = 0;
 
+/////////////////////для меню  
+  if(SCREEN[now_scr] == "MENU"){
+    if(But_UP.fell()){
+      sel_item--;
+      if(sel_item <= 0){
+        sel_item = 0;
+
+      }
+      tft.fillScreen(TFT_BLACK);
     }
-    Serial.println(11);
-    tft.fillScreen(TFT_BLACK);
-  }
-  if(But_DOWN.fell() and SCREEN[now_scr] == "MENU"){
-    sel_item++;
-    if(sel_item > 1){
-      sel_item = 2;
+    if(But_DOWN.fell()){
+      sel_item++;
+      if(sel_item > 1){
+        sel_item = 2;
+      }
+      tft.fillScreen(TFT_BLACK);
     }
-    Serial.println(1);
-    tft.fillScreen(TFT_BLACK);
+    ///////////////статистика
+    if(But_RIGHT.fell() and sel_item == 1){
+      now_scr = 2;
+      tft.fillScreen(TFT_BLACK);
+    }    
+    ///////////////
+
+    //////////стар шутер
+    if(But_RIGHT.fell() and sel_item == 0){
+      now_scr = 1;
+      tft.fillScreen(TFT_BLACK);
+    }
+    //////////
+
   }
 ///////////////////
 
 ////////////////////////////для статы
-
-  if(But_UP.fell() and SCREEN[now_scr] == "STATISTICS"){
-    st_sel_item--;
-    if(st_sel_item <= 0){
-      st_sel_item = 0; 
+  if(SCREEN[now_scr] == "STATISTICS"){
+    if(But_UP.fell()){
+      st_sel_item--;
+      if(st_sel_item <= 0){
+        st_sel_item = 0; 
+      }
+      tft.fillScreen(TFT_BLACK);
     }
-    tft.fillScreen(TFT_BLACK);
-  }
 
-  if(But_DOWN.fell() and SCREEN[now_scr] == "STATISTICS"){
-    st_sel_item++;
-    if(st_sel_item >= 4){
-      st_sel_item = 4; 
+    if(But_DOWN.fell()){
+      st_sel_item++;
+      if(st_sel_item >= 4){
+        st_sel_item = 4; 
+      }
+      tft.fillScreen(TFT_BLACK);
     }
-    tft.fillScreen(TFT_BLACK);
-  }
 
-  if(But_RIGHT.fell() and sel_item == 1 and SCREEN[now_scr] == "MENU"){
-    now_scr = 2;
-    tft.fillScreen(TFT_BLACK);
+    if(But_RIGHT.fell() and st_sel_item == 0){
+      now_scr = -1;
+      load_data();
+      tft.fillScreen(TFT_BLACK);
+      while(1){
+        But_UP.update();
+        
+        tft.setFreeFont(&FreeSans18pt7b);
+        tft.setTextColor(TFT_WHITE);       
+        tft.setCursor(20, 40);
+        tft.print("Star shooter");
+        
+        tft.setFreeFont(&FreeSans9pt7b);
+        tft.setCursor(10, 70);
+        tft.print("Record score ");
+        tft.setCursor(140, 70);
+        tft.print(star_high_score);
+
+        if(But_UP.fell()){tft.fillScreen(TFT_BLACK); st_sel_item = -1; now_scr = 2; break;}
+      }
+    }
+
+    if(But_LEFT.fell()){
+      tft.setTextColor(TFT_WHITE);
+      tft.fillScreen(TFT_BLACK);
+      now_scr = 0;
+    }
+
+
   }
 
 ////////////////////////////
 
-
-  /////////игра
-  if(But_RIGHT.fell() and sel_item == 0 and SCREEN[now_scr] == "MENU"){
-    now_scr = 1;
-    tft.fillScreen(TFT_BLACK);  
-  }
-  ////////////
 
 }
