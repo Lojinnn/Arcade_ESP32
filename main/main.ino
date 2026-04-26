@@ -177,20 +177,20 @@ void star_save(unsigned int new_score){
 
 void star_timet_stop(){
   if(timer_running){
-    star_time = millis() - star_timer;
+    star_time = millis() - start_timer;
     timer_running = false;
   }
 }
 
 void star_timer_update(){
   if(timer_running){
-    star_time = millis() - star_timer;
+    star_time = millis() - start_timer;
   }
 }
 
 void star_shooter_oneship(){
   star_score = 0;
-  star_timer = millis();
+  start_timer = millis();
   timer_running = true;
   while(1){
   
