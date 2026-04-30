@@ -54,6 +54,17 @@ unsigned int star_high_score;
 
 //////////////////
 
+/////////////ачивки
+//стар шутер
+bool star_first_hit = false; // первое попадание
+bool star_hun_hits = false;  // сто очков суммарно
+bool star_hun_hgsc = false;  // сто очков за сессию
+
+
+
+/////////////
+
+
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite ship_sprite = TFT_eSprite(&tft);
 TFT_eSprite aim_sprite = TFT_eSprite(&tft);
@@ -79,7 +90,6 @@ unsigned long s_tau_hit = 0;
 unsigned long s_tau = 0;
 unsigned long start_timer = 0;
 unsigned long star_time = 0;
-bool timer_running = false;
 
 uint8_t fps = 30; //в миллисекундах
 
@@ -153,15 +163,21 @@ void load_data(){
   prefs.begin("conf1", false);
   star_high_score = prefs.getUInt("st_hs", 0);
   star_all_score = prefs.getUInt("st_all_sc", 0);
+  star_time = prefs.getUInt("st_time", 0);
 
   prefs.end();
   //Serial.println("Load!");  
 }
 
 void star_save(unsigned int new_score){
+  unsigned long sesion_time = millis() - start_timer;
+  star_time += sesion_time;
+  
+  
   prefs.begin("conf1", false);
   star_all_score = new_score + star_all_score;
   prefs.putUInt("st_all_sc", star_all_score);
+  prefs.putUInt("st_time", star_time);
   if(star_high_score < new_score){
     star_high_score = new_score;
     
@@ -174,24 +190,26 @@ void star_save(unsigned int new_score){
 
 /////////////////////////////////////////////// может сделать более одного кораблика?
 
+/////////////////////////////////////время
+void star_timer_start(){
+  start_timer = millis();
 
-void star_timet_stop(){
-  if(timer_running){
-    star_time = millis() - start_timer;
-    timer_running = false;
-  }
 }
 
-void star_timer_update(){
-  if(timer_running){
-    star_time = millis() - start_timer;
-  }
+const char* star_conv_time(unsigned long ms) {
+  static char buf[12];
+  unsigned long sec = ms / 1000;
+  unsigned int h = sec / 3600;
+  unsigned int m = (sec % 3600) / 60;
+  unsigned int s = sec % 60;
+  sprintf(buf, "%02u:%02u:%02u", h, m, s);
+  return buf;
 }
+/////////////////////////////////////////////////////
 
 void star_shooter_oneship(){
   star_score = 0;
-  start_timer = millis();
-  timer_running = true;
+  star_timer_start();
   while(1){
   
     But_UP.update();    
@@ -205,7 +223,6 @@ void star_shooter_oneship(){
       tft.fillScreen(TFT_BLACK);  
       flag_hold = false;
     }
-    Serial.println(star_menu);
     if(star_menu == 0){
       star_start();
     }  
@@ -234,7 +251,6 @@ void star_shooter_oneship(){
 }
 
 void star_start(){
-  timer_running = false;
   tft.setFreeFont(&FreeSans24pt7b);
   tft.setCursor(20, 120);
   tft.print("!START!");
@@ -346,7 +362,8 @@ void star_ship_update(){
 
 void star_game(){
   if(millis() - s_tau < fps) return;
-  timer_running = true;
+  Serial.println(star_time);
+
   But_LEFT.update();
   s_tau = millis();
   star_aim_update();
@@ -378,7 +395,6 @@ void star_game(){
 }
 
 void star_end(){
-  timer_running = false;
   tft.setFreeFont(&FreeSans24pt7b);
   tft.setCursor(50, 80);
   tft.print("!END!");
@@ -570,6 +586,12 @@ void loop() {
         tft.print("All score ");
         tft.setCursor(140, 90);
         tft.print(star_all_score);
+
+        tft.setCursor(10, 110);
+        tft.print("time played ");
+        tft.setCursor(140, 110);
+        tft.print(star_conv_time(star_time));
+
 
         if(But_UP.fell()){tft.fillScreen(TFT_BLACK); st_sel_item = -1; now_scr = 2; break;}
       }
