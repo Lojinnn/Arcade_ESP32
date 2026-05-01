@@ -164,6 +164,9 @@ void load_data(){
   star_high_score = prefs.getUInt("st_hs", 0);
   star_all_score = prefs.getUInt("st_all_sc", 0);
   star_time = prefs.getUInt("st_time", 0);
+  star_first_hit = prefs.getBool("st_ach_fh", 0);
+  star_hun_hits = prefs.getBool("st_ach_hh", 0);
+  star_hun_hgsc = prefs.getBool("st_ach_h_hgsc", 0);
 
   prefs.end();
   //Serial.println("Load!");  
@@ -206,6 +209,14 @@ const char* star_conv_time(unsigned long ms) {
   return buf;
 }
 /////////////////////////////////////////////////////
+
+////////////////////ачивки
+void achievement(){
+
+
+}
+////////////////////
+
 
 void star_shooter_oneship(){
   star_score = 0;
