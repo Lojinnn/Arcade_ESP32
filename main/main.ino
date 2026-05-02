@@ -75,7 +75,7 @@ bool star_aim_fire = false;
 unsigned long aim_tau = 0;
 uint8_t aim_fire_time = 150;     //в миллисекундах
 //
-const short rand_s[] = {-2, -1, 1, 2}; //трогать только края (кроме хард мода)
+const short rand_s[] = {-10, -1, 1, 10}; //трогать только края (кроме хард мода)
 
 short star_menu = 0;
 bool flag_hold = false;
@@ -276,8 +276,8 @@ int x_a_old = 0;
 int y_a_old = 0;
 
 void star_aim_update(){
-  int JVX = map(analogRead(JX), 4040, 100, -28, 30);
-  int JVY = map(analogRead(JY), 4040, 0, -30, 30);
+  int JVX = map(analogRead(JX), 4040, 200, -28, 30);
+  int JVY = map(analogRead(JY), 4040, 200, -30, 30);
 
   x_a = x_a + JVX;
   y_a = y_a + JVY;
