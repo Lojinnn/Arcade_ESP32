@@ -211,8 +211,28 @@ const char* star_conv_time(unsigned long ms) {
 /////////////////////////////////////////////////////
 
 ////////////////////ачивки
-void achievement(){
+bool ach_flag;
+int st_ach_fh;
 
+void achievement(int tau){
+  if(star_score == 1 and star_first_hit == 0 and star_high_score == 0){
+    
+    star_first_hit = 1;
+
+    prefs.begin("conf1", false);
+    prefs.putBool("st_ach_fh", star_first_hit);
+    prefs.end();
+
+    st_ach_fh = millis();
+  }
+  if(star_first_hit){
+    tft.setCursor(160, 40);
+    tft.print("new achievement!");
+    ach_flag = true;
+  }
+  if(ach_flag and millis() - st_ach_fh >= tau){
+    tft.fillRect(155, 35, 100, 100, TFT_BLACK);
+  }
 
 }
 ////////////////////
@@ -373,8 +393,7 @@ void star_ship_update(){
 
 void star_game(){
   if(millis() - s_tau < fps) return;
-  Serial.println(star_time);
-
+  
   But_LEFT.update();
   s_tau = millis();
   star_aim_update();
@@ -399,7 +418,7 @@ void star_game(){
   if(s_hit and millis() - s_tau_hit >= 300){
     s_hit = false;
   }
-  
+  achievement(1000);
   ////////рендер
   star_render();  
   ////////
@@ -602,6 +621,11 @@ void loop() {
         tft.print("time played ");
         tft.setCursor(140, 110);
         tft.print(star_conv_time(star_time));
+
+        tft.setCursor(10, 130);
+        tft.print("First Hit!");
+        tft.setCursor(140, 130);
+        tft.print(star_first_hit);
 
 
         if(But_UP.fell()){tft.fillScreen(TFT_BLACK); st_sel_item = -1; now_scr = 2; break;}
