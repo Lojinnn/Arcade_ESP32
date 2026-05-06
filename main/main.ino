@@ -225,7 +225,7 @@ void achievement(int tau){
 
     st_ach_fh = millis();
   }
-  if(star_first_hit){
+  if(star_first_hit > 0){
     tft.setCursor(160, 40);
     tft.print("new achievement!");
     ach_flag = true;
