@@ -75,7 +75,7 @@ bool star_aim_fire = false;
 unsigned long aim_tau = 0;
 uint8_t aim_fire_time = 150;     //в миллисекундах
 //
-const short rand_s[] = {-10, -1, 1, 10}; //трогать только края (кроме хард мода)
+const short rand_s[] = {-2, -1, 1, 2}; //трогать только края (кроме хард мода)
 
 short star_menu = 0;
 bool flag_hold = false;
@@ -117,7 +117,6 @@ const uint8_t im_ship[] = {
 };
 
 
-
 void setup() {
   Serial.begin(115200);
 
@@ -157,6 +156,13 @@ void setup() {
 
   load_data();
   
+}
+
+void call(){
+  Serial.print  ("X:");
+  Serial.print  (analogRead(JX));
+  Serial.print  ("Y:");
+  Serial.println(analogRead(JY));
 }
 
 void load_data(){
@@ -211,28 +217,8 @@ const char* star_conv_time(unsigned long ms) {
 /////////////////////////////////////////////////////
 
 ////////////////////ачивки
-bool ach_flag;
-int st_ach_fh;
+void achievement(){
 
-void achievement(int tau){
-  if(star_score == 1 and star_first_hit == 0 and star_high_score == 0){
-    
-    star_first_hit = 1;
-
-    prefs.begin("conf1", false);
-    prefs.putBool("st_ach_fh", star_first_hit);
-    prefs.end();
-
-    st_ach_fh = millis();
-  }
-  if(star_first_hit > 0){
-    tft.setCursor(160, 40);
-    tft.print("new achievement!");
-    ach_flag = true;
-  }
-  if(ach_flag and millis() - st_ach_fh >= tau){
-    tft.fillRect(155, 35, 100, 100, TFT_BLACK);
-  }
 
 }
 ////////////////////
@@ -288,6 +274,7 @@ void star_start(){
   tft.setFreeFont(&FreeSans9pt7b);
   tft.setCursor(20, 170);
   tft.print("Star shooter 2026");
+  call();             //опрос джостика для диагностики
 }
 
 int x_a = 120;
@@ -296,8 +283,8 @@ int x_a_old = 0;
 int y_a_old = 0;
 
 void star_aim_update(){
-  int JVX = map(analogRead(JX), 4040, 200, -28, 30);
-  int JVY = map(analogRead(JY), 4040, 200, -30, 30);
+  int JVX = map(analogRead(JX), 4095, 0, -30, 30);
+  int JVY = map(analogRead(JY), 4095, 0, -30, 30);
 
   x_a = x_a + JVX;
   y_a = y_a + JVY;
@@ -393,7 +380,8 @@ void star_ship_update(){
 
 void star_game(){
   if(millis() - s_tau < fps) return;
-  
+  Serial.println(star_time);
+
   But_LEFT.update();
   s_tau = millis();
   star_aim_update();
@@ -418,7 +406,7 @@ void star_game(){
   if(s_hit and millis() - s_tau_hit >= 300){
     s_hit = false;
   }
-  achievement(1000);
+  
   ////////рендер
   star_render();  
   ////////
@@ -621,11 +609,6 @@ void loop() {
         tft.print("time played ");
         tft.setCursor(140, 110);
         tft.print(star_conv_time(star_time));
-
-        tft.setCursor(10, 130);
-        tft.print("First Hit!");
-        tft.setCursor(140, 130);
-        tft.print(star_first_hit);
 
 
         if(But_UP.fell()){tft.fillScreen(TFT_BLACK); st_sel_item = -1; now_scr = 2; break;}
